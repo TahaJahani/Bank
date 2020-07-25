@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.Socket;
+import java.util.Objects;
 
 public class ClientHandler extends Thread {
     private Socket client;
@@ -23,13 +24,15 @@ public class ClientHandler extends Thread {
                 msg = inputStream.readUTF();
                 System.out.println(msg);
                 checkReceivedMessage(msg);
-            }catch (IOException e) {
+            }catch (EOFException e) {
                 break;
             } catch (Exception e) {
+                e.printStackTrace();
                 sendReply(e.getMessage());
             }
         }
         try {
+            Bank.removeClient(client);
             client.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -39,12 +42,15 @@ public class ClientHandler extends Thread {
     private void sendReply (String message) {
         try {
             outputStream.writeUTF(message);
+            System.out.println("Reply: " + message);
             outputStream.flush();
+            System.out.println("Sent\n");
         } catch (IOException ignored) {
         }
     }
 
     private void checkReceivedMessage (String message) throws Exception {
+        System.out.println("Received: " + message + "\n");
         String[] parameters = message.split("\\s");
         int size = parameters.length;
         if (message.startsWith("create_account") && size == 6) {
@@ -67,7 +73,7 @@ public class ClientHandler extends Thread {
 
     private void getBalance(String token) throws Exception {
         checkToken(token);
-        sendReply(String.valueOf(Bank.getAccountByToken(token).getBalance()));
+        sendReply(String.valueOf(Objects.requireNonNull(Bank.getAccountByToken(token)).getBalance()));
     }
 
     private void pay(String receiptId) throws Exception {
@@ -78,7 +84,7 @@ public class ClientHandler extends Thread {
                 receiptToPay.getDestAccount().deposit(receiptToPay.getMoney());
                 break;
             case "withdraw":
-                receiptToPay.getDestAccount().withdraw(receiptToPay.getMoney());
+                receiptToPay.getSourceAccount().withdraw(receiptToPay.getMoney());
                 break;
             case "move":
                 receiptToPay.getSourceAccount().withdraw(receiptToPay.getMoney());

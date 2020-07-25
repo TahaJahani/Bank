@@ -7,7 +7,7 @@ public class Bank {
 
     private final int PORT = 2222;
     private final String IP = "127.0.0.1";
-    private ArrayList<Socket> connectedClients = new ArrayList<>();
+    private static ArrayList<Socket> connectedClients = new ArrayList<>();
     private ServerSocket serverSocket;
     private static ArrayList<BankAccount> allAccounts = new ArrayList<>();
     private static ArrayList<Receipt> allReceipts = new ArrayList<>();
@@ -15,6 +15,7 @@ public class Bank {
     public static void main(String[] args) {
         try {
             loadFromDatabase();
+            System.out.println("Database loaded successfully");
             new Bank().waitForClient();
         } catch (IOException e) {
             e.printStackTrace();
@@ -60,6 +61,7 @@ public class Bank {
         serverSocket = new ServerSocket(PORT);
         while (true) {
             Socket client = serverSocket.accept();
+            System.out.println("new client connected");
             connectedClients.add(client);
             new ClientHandler(client).start();
         }
@@ -72,6 +74,10 @@ public class Bank {
         } catch (IOException e) {
             throw new Exception("database error");
         }
+    }
+
+    public static void removeClient (Socket client) {
+        connectedClients.remove(client);
     }
 
     public static void addReceipt(Receipt receipt) throws Exception {
