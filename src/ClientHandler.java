@@ -21,6 +21,7 @@ public class ClientHandler extends Thread {
         while (!msg.equals("exit")) {
             try {
                 msg = inputStream.readUTF();
+                System.out.println(msg);
                 checkReceivedMessage(msg);
             }catch (IOException e) {
                 break;
@@ -61,7 +62,7 @@ public class ClientHandler extends Thread {
         else if (message.equals("exit")) {
             return;
         } else
-            throw new Exception("invalid input");
+            throw new Exception("error: invalid input");
     }
 
     private void getBalance(String token) throws Exception {
@@ -90,12 +91,12 @@ public class ClientHandler extends Thread {
 
     private void checkReceiptBeforePay(Receipt receiptToPay) throws Exception {
         if (receiptToPay == null)
-            throw new Exception("invalid receipt id");
+            throw new Exception("error: invalid receipt id");
         if (receiptToPay.isPaid())
-            throw new Exception("receipt is paid before");
+            throw new Exception("error: receipt is paid before");
         if (!receiptToPay.getType().equals("deposit")) {
             if (receiptToPay.getSourceAccount().getBalance() < receiptToPay.getMoney())
-                throw new Exception("source account does not have enough money");
+                throw new Exception("error: source account does not have enough money");
         }
     }
 
@@ -124,26 +125,26 @@ public class ClientHandler extends Thread {
             return; //exception is thrown
         if (!split[2].equals("deposit")) {
             if (!split[4].equals(String.valueOf(loggedOnAccount.getId())))
-                throw new Exception("token is invalid");
+                throw new Exception("error: token is invalid");
             if (!Bank.checkAccountId(split[4]))
-                throw new Exception("source account id is invalid");
+                throw new Exception("error: source account id is invalid");
         }else{
             if (!split[4].equals("-1"))
-                throw new Exception("invalid account id");
+                throw new Exception("error: invalid account id");
         }
         if (!split[2].equals("withdraw")) {
             if (!Bank.checkAccountId(split[5]))
-                throw new Exception("dest account id is invalid");
+                throw new Exception("error: dest account id is invalid");
         }
         if (split[4].equals(split[5]))
-            throw new Exception("equal source and dest account");
+            throw new Exception("error: equal source and dest account");
         if (!split[6].matches("\\w+"))
-            throw new Exception("your input contains invalid characters");
+            throw new Exception("error: your input contains invalid characters");
     }
 
     private void getToken(String username, String password) throws Exception {
         if (!Bank.checkAuthentication(username, password))
-            throw new Exception("invalid username or password");
+            throw new Exception("error: invalid username or password");
         BankAccount loggedOnAccount = Bank.getAccountByUsername(username);
         String token = generateToken();
         assert loggedOnAccount != null;
@@ -154,9 +155,9 @@ public class ClientHandler extends Thread {
     private boolean checkToken (String token) throws Exception {
         BankAccount account = Bank.getAccountByToken(token);
         if (account == null)
-            throw new Exception("invalid token");
+            throw new Exception("error: invalid token");
         if (account.isTokenExpired())
-            throw new Exception("token expired");
+            throw new Exception("error: token expired");
         return true;
     }
 
@@ -176,9 +177,9 @@ public class ClientHandler extends Thread {
 
     private void createAccount(String[] split) throws Exception {
         if (!split[4].equals(split[5]))
-            throw new Exception("Passwords do not match");
+            throw new Exception("error: Passwords do not match");
         if (Bank.isUsernameDuplicated(split[3]))
-            throw new Exception("username is not available");
+            throw new Exception("error: username is not available");
         BankAccount account = new BankAccount(split[1], split[2], split[3], split[4], Bank.getNumberOfAccounts());
         Bank.addAccount(account);
         sendReply(String.valueOf(account.getId()));
@@ -187,6 +188,6 @@ public class ClientHandler extends Thread {
     private boolean checkNumericalInput (String input) throws Exception {
         if ( input.matches("\\d+") && Integer.parseInt(input) != 0 )
             return true;
-        throw new Exception("invalid money");
+        throw new Exception("error: invalid money");
     }
 }

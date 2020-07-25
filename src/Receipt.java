@@ -25,7 +25,7 @@ public class Receipt implements Serializable {
     public static boolean checkType (String type) throws Exception {
         if ( type.equals("deposit") || type.equals("withdraw") || type.equals("move") )
             return true;
-        throw new Exception("invalid receipt type");
+        throw new Exception("error: invalid receipt type");
     }
 
     public int getId() {
